@@ -1,0 +1,1161 @@
+{
+	"info": {
+		"_postman_id": "7d840776-6d5e-43e9-a4a0-5ec9ad942a4d",
+		"name": "Moovsmart",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45613478"
+	},
+	"item": [
+		{
+			"name": "Főoldal",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:4200",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4200"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Új regisztráció",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"// Biztonságos ID mentés - csak ha létezik\r",
+							"try {\r",
+							"    const responseJson = pm.response.json();\r",
+							"    console.log(\"Full response:\", JSON.stringify(responseJson, null, 2));\r",
+							"    \r",
+							"    if (responseJson && responseJson.id) {\r",
+							"        pm.environment.set(\"user_id\", responseJson.id);\r",
+							"        console.log(\"User ID saved:\", responseJson.id);\r",
+							"    } else {\r",
+							"        console.log(\"No user ID found in response. Response was:\", responseJson);\r",
+							"    }\r",
+							"} catch (error) {\r",
+							"    console.log(\"Could not parse response as JSON or extract ID:\", error.message);\r",
+							"    console.log(\"Raw response:\", pm.response.text());\r",
+							"}\r",
+							"\r",
+							"// Email és password mentése environment-ből (a pre-request-ben generáltak)\r",
+							"const registeredEmail = pm.environment.get(\"testEmail\");\r",
+							"const registeredPassword = pm.environment.get(\"regPassword\");\r",
+							"\r",
+							"if (registeredEmail && registeredPassword) {\r",
+							"    console.log(\"Registration data saved - Email:\", registeredEmail);\r",
+							"} "
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Dynamic email generálás\r",
+							"const dynamicEmail = `test_${Date.now()}_${Math.floor(Math.random()*1000)}@test.com`;\r",
+							"pm.environment.set(\"testEmail\", dynamicEmail);\r",
+							"\r",
+							"// Password is beállítása (ha fix)\r",
+							"pm.environment.set(\"regPassword\", \"TempPassword123!\");\r",
+							"\r",
+							"console.log(\"Generated email:\", dynamicEmail);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"{{testEmail}}\",\r\n  \"password\": \"{{regPassword}}\",\r\n  \"firstName\": \"Test\",\r\n  \"lastName\": \"User\",\r\n  \"phoneNumber\": \"+36301234567\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/users/registration",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Belépés a tokenért",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"const responseJson = pm.response.json();\r",
+							"pm.environment.set(\"accessToken\", responseJson.tokenModel.accessToken);\r",
+							"console.log(\"Token saved\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/users/login",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlanok listája",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"// Kerüljük ki a JSON parse-t\r",
+							"const responseText = pm.response.text();\r",
+							"\r",
+							"// Keressük meg az első ID-t regex-szel\r",
+							"const idMatch = responseText.match(/\"id\":\\s*(\\d+)/);\r",
+							"\r",
+							"if (idMatch) {\r",
+							"    const propertyId = idMatch[1];\r",
+							"    pm.environment.set(\"propertyId\", propertyId);\r",
+							"    console.log(\"Property ID found:\", propertyId);\r",
+							"} else {\r",
+							"    console.log(\"No ID found\");\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{backendURL}}/api/upload/list",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"upload",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Kimenő üzenetek listája",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/messages/messageListOutgoing",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"messages",
+						"messageListOutgoing"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Bejövő üzenetek listája",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/messages/messageListIngoing",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"messages",
+						"messageListIngoing"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Új üzenet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is acceptable\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"// Ha sikeres, mentsd el a message ID-t\r",
+							"try {\r",
+							"    const responseJson = pm.response.json();\r",
+							"    console.log(\"Send message response:\", JSON.stringify(responseJson, null, 2));\r",
+							"    \r",
+							"    if (responseJson && responseJson.id) {\r",
+							"        pm.environment.set(\"messageId\", responseJson.id);\r",
+							"        console.log(\"Message ID saved:\", responseJson.id);\r",
+							"    }\r",
+							"} catch (error) {\r",
+							"    console.log(\"Response parsing error:\", error.message);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "text",
+							"value": "Test message from Postman",
+							"type": "text"
+						},
+						{
+							"key": "propertyId",
+							"value": "{{propertyId}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/messages/sendNewMessage",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"messages",
+						"sendNewMessage"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Új üzenet lekérdezése",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/messages/messageListIngoing",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"messages",
+						"messageListIngoing"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Saját ingatlanok lekérdezés",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/myProperties",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"myProperties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "User által feltöltött ingatlanok (végtelen JSON)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/search/init",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"search",
+						"init"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlan showcase lista (for sale + for rent)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"// Save a property ID for other tests\r",
+							"const data = pm.response.json();\r",
+							"if (data.forSale && data.forSale.length > 0) {\r",
+							"    pm.environment.set(\"samplePropertyId\", data.forSale[0].id);\r",
+							"    console.log(\"Sample property ID saved:\", data.forSale[0].id);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/new",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"new"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Új ingatlan ellenőrzés",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/{{samplePropertyId}}",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"{{samplePropertyId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlan létrehozása(törik)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"pm.test(\"Property ID mentése\", function () {\r",
+							"    pm.environment.set(\"propertyId\", pm.response.json().id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"dynamicDescription\", \"Test property from Postman API testing\");\r",
+							"pm.environment.set(\"randomPrice\", 35000000);\r",
+							"pm.environment.set(\"randomSquareMeter\", 85);\r",
+							"pm.environment.set(\"dynamicStreet\", \"Postman Test utca\");\r",
+							"pm.environment.set(\"dynamicHouseNumber\", \"42\");\r",
+							"pm.environment.set(\"dynamicZipCode\", \"1056\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"condition_type\": \"NEWLY_BUILT\",\r\n  \"description\": \"{{dynamicDescription}}\",\r\n  \"heating_type\": \"GAS\",\r\n  \"number_of_baths\": 1,\r\n  \"number_of_rooms\": 3,\r\n  \"price\": {{randomPrice}},\r\n  \"property_type\": \"HOUSE\",\r\n  \"sale_type\": \"SELL\",\r\n  \"square_meter\": {{randomSquareMeter}},\r\n  \"year_built\": 2015,\r\n  \"city\": \"Budapest\",\r\n  \"country\": \"Hungary\",\r\n  \"street\": \"{{dynamicStreet}}\", \r\n  \"house_number\": \"{{dynamicHouseNumber}}\",\r\n  \"zip_code\": \"{{dynamicZipCode}}\"\r\n}-",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlan törlése",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sikeres törlés\", function () {\r",
+							"    pm.response.to.have.status(200).or(pm.response.to.have.status(204));\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"testuser@example.com\",\r\n  \"password\": \"Test1234!\",\r\n  \"lastName\": \"Teszt\",\r\n  \"firstName\": \"Elek\",\r\n  \"phoneNumber\": \"+36301234567\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/users/{{propertyId}}",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{propertyId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlan módosítása",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sikeres törlés\", function () {\r",
+							"    pm.response.to.have.status(200).or(pm.response.to.have.status(204));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"testuser@example.com\",\r\n  \"password\": \"Test1234!\",\r\n  \"lastName\": \"Teszt\",\r\n  \"firstName\": \"Elek\",\r\n  \"phoneNumber\": \"+36301234567\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/update/{id}",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"update",
+						"{id}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ingatlan módosítás lekérdezése",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"pm.test(\"Felhasználó adatok lekérése\", function () {\r",
+							"    pm.environment.set(\"propertyId\", pm.response.json().id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"condition_type\": \"NEW\",\r\n  \"description\": \"Teszt ingatlan\",\r\n  \"heating_type\": \"GAS\",\r\n  \"number_of_baths\": 1,\r\n  \"number_of_rooms\": 3,\r\n  \"price\": 25000000,\r\n  \"property_type\": \"HOUSE\",\r\n  \"sale_type\": \"SELL\",\r\n  \"square_meter\": 80,\r\n  \"year_built\": 2015\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Meghatározott értékű ingatlan",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"pm.test(\"Felhasználó adatok lekérése\", function () {\r",
+							"    pm.environment.set(\"propertyId\", pm.response.json().id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{validPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{validEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"condition_type\": \"NEW\",\r\n  \"description\": \"Teszt ingatlan\",\r\n  \"heating_type\": \"GAS\",\r\n  \"number_of_baths\": 1,\r\n  \"number_of_rooms\": 3,\r\n  \"price\": 25000000,\r\n  \"property_type\": \"HOUSE\",\r\n  \"sale_type\": \"SELL\",\r\n  \"square_meter\": 80,\r\n  \"year_built\": 2015\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/formData",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"formData"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Feltételes keresés",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Response time is less than 1000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"pm.test(\"Felhasználó adatok lekérése\", function () {\r",
+							"    pm.environment.set(\"propertyId\", pm.response.json().id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"city\": \"Budapest\",\r\n  \"saleType\": \"SELL\",\r\n  \"minPrice\": 20000000,\r\n  \"maxPrice\": 80000000,\r\n  \"propertyType\": \"HOUSE\",\r\n  \"minSquareMeter\": 60,\r\n  \"maxSquareMeter\": 120,\r\n  \"minYearBuilt\": 2000,\r\n  \"maxYearBuilt\": 2024,\r\n  \"minNumberOfRooms\": 2,\r\n  \"maxNumberOfRooms\": 5,\r\n  \"minNumberOfBaths\": 1,\r\n  \"maxNumberOfBaths\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backendURL}}/api/properties/search",
+					"host": [
+						"{{backendURL}}"
+					],
+					"path": [
+						"api",
+						"properties",
+						"search"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
