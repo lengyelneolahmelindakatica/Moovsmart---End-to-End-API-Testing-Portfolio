@@ -21,10 +21,10 @@ This portfolio project demonstrates end-to-end API testing for Moovsmart, coveri
 - Status code, response time, JSON schema and data validation
 
 ## Repository Contents
-- `postman/` → Postman Collection + Environment files
-- `soapui/` → SoapUI project file
-- `documentation/` → API endpoints documentation
-- `screenshots/` → Test execution evidence
+- `postman/` → Postman Collection + Environment files + screenshot
+- `soapui/` → SoapUI project file + screenshots
+-  API endpoints documentation
+
 
 ## How to Run
 1. Import the Postman collection and environment
